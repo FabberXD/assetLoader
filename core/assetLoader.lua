@@ -6,7 +6,7 @@ assetLoader.load = function(config)
 	assetLoader.loading = assetLoader.loading + 1
 
 	local asset = {}
-	asset.type = config.type or "none"
+	asset.type = config.type or "text"
 	asset.onLoad = config.onLoad or function(_) end
 	asset.onError = config.onError
 		or function(_)
@@ -16,8 +16,10 @@ assetLoader.load = function(config)
 	asset.request = HTTP:Get(config.url, function(res)
 		asset.status_code = res.StatusCode
 
-		if asset.type == "none" then
+		if asset.type == "data" then
 			asset.data = res.Body
+		elseif asset.type == "text" then
+			asset.data = res.Body:ToString()
 		elseif asset.type == "json" then
 			local exec, error = pcall(function()
 				asset.data = JSON:Decode(res.Body)
@@ -31,7 +33,7 @@ assetLoader.load = function(config)
 			error("Failed to load '" .. asset.url .. "'. Wrong type '" .. asset.type .. "'.", 2)
 		end
 
-		if asset.StatusCode ~= 200 then
+		if asset.StatusCode ~= 200 and asset.StatusCore ~= 204 then
 			assetLoader.loading = assetLoader.loading - 1
 			asset:onError()
 			return
